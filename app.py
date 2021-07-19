@@ -5,9 +5,8 @@ import plotly.express as px
 import pandas as pd
 from dash.dependencies import Input, Output
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__)
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
@@ -17,7 +16,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 dublin_constits = ["Dublin Bay South", "Dublin Central", "Dublin South Central", "Dublin North West", "Dublin Mid West",
                   "Dublin South West", "Dublin West", "Dublin Fingal", "Dublin Rathdown", "Dún Laoghaire", "Dublin Bay North"]
-
+    
 
 
 cons_location = "https://raw.githubusercontent.com/LiamConnors/elections_ireland/main/constituencies.csv"
@@ -82,10 +81,10 @@ app.layout = html.Div(children=[
     dcc.Dropdown(
         id='seat-dropdown',
         options=[
-            {'label': '3 seats', 'value': 3},
-            {'label': '4 seats', 'value': 4},
-            {'label': '5 seats', 'value': 5},
-            {'label': 'All', 'value': 0}
+            {'label': 'Count number', 'value': 3},
+            {'label': 'Number of candidates', 'value': 2},
+            {'label': 'Turnout %', 'value': 1},
+            {'label': 'Spoilt votes %', 'value': 0}
         ],
         value=0
     ),
@@ -103,14 +102,7 @@ app.layout = html.Div(children=[
     #    figure=fig
     #   ),
             
-            html.Br(),
-            
-            html.P(children="Constituencies in Irish general elections have either 3, 4, or 5 seats"),
-            
-    dcc.Graph(
-        id='example-graph-2',
-        figure=fig2
-    )    
+
             
 ])
     
@@ -120,22 +112,36 @@ app.layout = html.Div(children=[
     Output('graph-with-slider', 'figure'),
     Input('seat-dropdown', 'value'))
 def update_figure(selected_seat):
-    if selected_seat !=0:
-        filtered_df = cons_data[cons_data.SeatsinConstit == selected_seat]
-    else:
+    if selected_seat == 0:
         filtered_df = cons_data
+        y_value = "Spoiled_votes_percent"
+        current_title = "Spoilt votes % by constituency"
+    
+    elif selected_seat == 1:
+        filtered_df = cons_data
+        y_value = "Turnout"
+        current_title = "Turnout % by constituency"
         
+    elif selected_seat == 2:
+        filtered_df = cons_data
+        y_value = "Number Of Candidates"
+        current_title = "No. of candidates"
+    elif selected_seat == 3:
+        filtered_df = cons_data
+        y_value = "Count Number"
+        current_title = "Count number"       
+
 
     
     
     
     fig = px.bar(
-             filtered_df, x="Constituency Name", y="Turnout",
+             filtered_df, x="Constituency Name", y=y_value,
              hover_data=["Total Electorate", "Total Poll"],
              labels = {"Turnout":"Turnout %", "Constituency Name": "Constituency"},
              color="In_Dublin",
             
-             title="Turnout % by constituency",
+             title=current_title,
              height=700,
              width=1200)
     fig.update_xaxes(categoryorder='total ascending')
