@@ -28,6 +28,17 @@ cons_data["In_Dublin"] = cons_data["Constituency Name"].apply(lambda x : "Dublin
 cons_data.sort_values(by="Turnout", inplace=True)
 
 
+candidates = pd.read_csv("https://raw.githubusercontent.com/LiamConnors/elections_ireland/main/elections2.csv", encoding="latin_1")
+candidates["unique_id"] = candidates["Constituency Number"].astype(str) + candidates["Candidate Id"].astype(str)
+elected = candidates[candidates["Result"]=="Elected"]
+candidate_ids = list(elected["unique_id"].unique())
+candidates_info = pd.read_csv("https://raw.githubusercontent.com/LiamConnors/elections_ireland/main/candidates_info.csv", encoding="latin_1")
+candidates_info["unique_id"] = candidates_info["Constituency Number"].astype(str) + candidates_info["Candidate Id"].astype(str)
+elected_tds = candidates_info[candidates_info["unique_id"].isin(candidate_ids)]
+elected_tds["Full name"] = elected_tds["Firstname"] + " " + elected_tds["Surname"]
+elected_tds["Seat numbers"]=1
+
+
 # Refined data for graph 2
 seat_numbers_in_constit = cons_data["SeatsinConstit"]
 seat_numbers_in_constit = pd.DataFrame(seat_numbers_in_constit.value_counts())
@@ -52,8 +63,11 @@ fig = px.bar(
 
 fig.update_xaxes(categoryorder='total ascending')
 
-fig2= px.pie(pd.DataFrame(seat_numbers_in_constit), values="SeatsinConstit", names="number_of_seats", labels = {"SeatsinConstit":"Number of constituencies", "number_of_seats": "Seats"},
-            title="Breakdown by 3, 4 and 5 seat constituencies")
+fig2 = px.bar(elected_tds, x="Constituency", y="Seat numbers", title="TDs elected for each constituency", height=500, color='Party Id',barmode="relative",
+             category_orders={"Constituency": ["Dublin Bay South", "Dublin Central", "Dublin Bay North", "Dublin Fingal", "Dublin Mid-West",
+                                               "Dublin North West", "Dun Laoghaire", "Dublin Rathdown",
+                                               "Dublin South Central", "Dublin South West", "Dublin West"]} ,color_discrete_map = {"Sinn Féin":"#326760", "Fine Gael": "#6699FF", "Fianna Fáil": "#66BB66", "The Labour Party": "#CC0000", "I.4.C.": "#FFC0CB", "Social Democrats": "#752F8B", "Non-Party": "grey", "Green Party/ Comhaontas Glas": "#22AC6F", "Solidarity - People Before Profit": "#8E2420" }, hover_data=['Full name', 'Party Id', 'Votes'])
+
 
 
 # App layout
@@ -73,6 +87,7 @@ app.layout = html.Div(children=[
 #   html.Div(id='my-output'),
     html.Br(),
     
+    html.Br(),
     
     html.Div([
   
@@ -95,12 +110,12 @@ app.layout = html.Div(children=[
 
 ]),
              
-#html.P(children="Turnout % is the number of people who voted divided by the total registered electorate"),  
+html.P(children=""),  
 
-    #dcc.Graph(
-    #    id='example-graph',
-    #    figure=fig
-    #   ),
+    dcc.Graph(
+        id='example-graph-1',
+        figure=fig2
+       ),
             
 
             
